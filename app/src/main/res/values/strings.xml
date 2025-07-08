@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">TVKeyMapper</string>
+    <string name="netflix_button_test">Назначить приложение на кнопку Netflix</string>
+    <string name="live_button_text">Назначить приложение на кнопку Live</string>
+    <string name="live_tv_textview_label">Приложение для кнопки Live TV</string>
+    <string name="save_button_label">Сохранить назначения</string>
+    <string name="permissions_settings_button_label">Открыть настройки разрешений</string>
+    <string name="netflix_textview_label">Приложение для кнопки Netflix</string>
+</resources>
