@@ -7,12 +7,12 @@ on:
 
 jobs:
   build:
-    name: Build Release APK
+    name: Build TVKeyMapper
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -20,40 +20,39 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Grant execute permission for gradlew
+      - name: Make gradlew executable
         run: chmod +x gradlew
 
       - name: Build Release APK
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --no-daemon
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v3
+      - name: Rename and package APK
+        run: |
+          mkdir -p release_artifacts
+          cp app/build/outputs/apk/release/*.apk release_artifacts/tvkeymapper.apk
+
+      - uses: actions/upload-artifact@v3
         with:
-          name: MiTV-Key-Mapper
-          path: app/build/outputs/apk/release/*.apk
+          name: tvkeymapper-apk
+          path: release_artifacts/tvkeymapper.apk
 
   release:
-    name: Create Release
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
-      - name: Download APK
-        uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3
         with:
-          name: MiTV-Key-Mapper
+          name: tvkeymapper-apk
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - uses: softprops/action-gh-release@v1
         with:
-          files: |
-            app-release.apk
+          files: tvkeymapper.apk
           tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref_name }}
+          name: "v${{ github.ref_name }}"
           body: |
             Android TV Key Mapper for Xiaomi Mi Box 4
-            
-            ### Changes
-            Auto-generated release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            ### Changelog
+            - Auto-generated release
