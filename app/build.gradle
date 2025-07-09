@@ -9,7 +9,8 @@ android {
     defaultConfig {
         applicationId "ru.easty.andoird.tvkeymapper"
         minSdk 26
-        targetSdk 36
+        //noinspection OldTargetApi, for foregroud service of logcat monitoring
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 

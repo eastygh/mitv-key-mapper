@@ -2,13 +2,16 @@ package ru.easty.andoird.tvkeymapper.activity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ru.easty.andoird.tvkeymapper.R;
+import ru.easty.andoird.tvkeymapper.adapter.AppListAdapter;
+import ru.easty.andoird.tvkeymapper.model.AppEntry;
 import ru.easty.andoird.tvkeymapper.service.LogcatMonitorService;
 
 public class MainActivity extends AppCompatActivity {
@@ -32,8 +37,8 @@ public class MainActivity extends AppCompatActivity {
         Button saveButton = findViewById(R.id.save_button);
         Button permissionButton = findViewById(R.id.permission_button);
 
-        List<String> apps = getInstalledApps();
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, apps);
+        List<AppEntry> apps = getInstalledApps();
+        AppListAdapter adapter = new AppListAdapter(this, apps);
         netflixSpinner.setAdapter(adapter);
         liveSpinner.setAdapter(adapter);
 
@@ -41,14 +46,30 @@ public class MainActivity extends AppCompatActivity {
         String savedNetflix = prefs.getString("key_netflix_package", null);
         String savedLive = prefs.getString("key_live_package", null);
 
-        if (savedNetflix != null) netflixSpinner.setSelection(apps.indexOf(savedNetflix));
-        if (savedLive != null) liveSpinner.setSelection(apps.indexOf(savedLive));
+        if (savedNetflix != null) {
+            for (int i = 0; i < apps.size(); i++) {
+                if (apps.get(i).packageName.equals(savedNetflix)) {
+                    netflixSpinner.setSelection(i);
+                    break;
+                }
+            }
+        }
+
+        if (savedLive != null) {
+            for (int i = 0; i < apps.size(); i++) {
+                if (apps.get(i).packageName.equals(savedLive)) {
+                    liveSpinner.setSelection(i);
+                    break;
+                }
+            }
+        }
 
         saveButton.setOnClickListener(v -> {
             SharedPreferences.Editor editor = prefs.edit();
-            editor.putString("key_netflix_package", (String) netflixSpinner.getSelectedItem());
-            editor.putString("key_live_package", (String) liveSpinner.getSelectedItem());
+            editor.putString("key_netflix_package", ((AppEntry) netflixSpinner.getSelectedItem()).packageName);
+            editor.putString("key_live_package", ((AppEntry) liveSpinner.getSelectedItem()).packageName);
             editor.apply();
+            Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show();
         });
 
         permissionButton.setOnClickListener(v -> {
@@ -57,19 +78,21 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Запуск сервиса при открытии
         Intent serviceIntent = new Intent(this, LogcatMonitorService.class);
         startForegroundService(serviceIntent);
     }
 
-    private List<String> getInstalledApps() {
-        List<String> packages = new ArrayList<>();
+    private List<AppEntry> getInstalledApps() {
+        List<AppEntry> entries = new ArrayList<>();
         PackageManager pm = getPackageManager();
-        for (var pkg : pm.getInstalledApplications(0)) {
-            if (pm.getLaunchIntentForPackage(pkg.packageName) != null) {
-                packages.add(pkg.packageName);
+        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+        for (ApplicationInfo appInfo : apps) {
+            if (pm.getLaunchIntentForPackage(appInfo.packageName) != null) {
+                String label = pm.getApplicationLabel(appInfo).toString();
+                Drawable icon = pm.getApplicationIcon(appInfo);
+                entries.add(new AppEntry(label, appInfo.packageName, icon));
             }
         }
-        return packages;
+        return entries;
     }
 }
