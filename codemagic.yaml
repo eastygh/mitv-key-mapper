@@ -5,8 +5,11 @@ workflows:
     environment:
       vars:
         JAVA_VERSION: 17
+        RELEASE_NAME: "MiTV Key Mapper"
       android_signing:
         - mitv_key_mapper_keystore
+      secure: # здесь подхватываются приватные переменные, включая GITHUB_TOKEN
+        GITHUB_TOKEN: Encrypted(...)
     scripts:
       - name: Set up Java
         script: |
@@ -19,7 +22,31 @@ workflows:
       - name: Copy APK
         script: |
           mkdir -p $CM_BUILD_DIR/output
-          cp app/build/outputs/apk/release/*.apk $CM_BUILD_DIR/output/
+          cp app/build/outputs/apk/release/*.apk $CM_BUILD_DIR/output/tvkeymapper.apk
+      - name: Upload to GitHub Release
+        script: |
+          TAG_NAME=$(echo $CM_TAG)
+          RELEASE_BODY="Automated release via Codemagic CI"
+          curl -s \
+            -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/eastygh/mitv-key-mapper/releases \
+            -d '{
+              "tag_name": "'"$TAG_NAME"'",
+              "name": "'"${RELEASE_NAME} $TAG_NAME"'",
+              "body": "'"$RELEASE_BODY"'",
+              "draft": false,
+              "prerelease": false
+            }' > release.json
+
+          UPLOAD_URL=$(cat release.json | grep upload_url | cut -d '"' -f4 | cut -d '{' -f1)
+          curl -s \
+            -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary @"$CM_BUILD_DIR/output/tvkeymapper.apk" \
+            "$UPLOAD_URL?name=tvkeymapper.apk"
     artifacts:
       - output/*.apk
     triggering:
