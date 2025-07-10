@@ -8,25 +8,29 @@ workflows:
         RELEASE_NAME: "MiTV Key Mapper"
       android_signing:
         - mitv_key_mapper_keystore
-      secure: # здесь подхватываются приватные переменные, включая GITHUB_TOKEN
-        GITHUB_TOKEN: Encrypted(...)
+
     scripts:
       - name: Set up Java
         script: |
           sdk install java ${JAVA_VERSION}.0.2-tem
           sdk use java ${JAVA_VERSION}.0.2-tem
+
       - name: Make gradlew executable
         script: chmod +x ./gradlew
+
       - name: Build release APK
         script: ./gradlew assembleRelease
+
       - name: Copy APK
         script: |
           mkdir -p $CM_BUILD_DIR/output
           cp app/build/outputs/apk/release/*.apk $CM_BUILD_DIR/output/tvkeymapper.apk
+
       - name: Upload to GitHub Release
         script: |
           TAG_NAME=$(echo $CM_TAG)
           RELEASE_BODY="Automated release via Codemagic CI"
+
           curl -s \
             -X POST \
             -H "Authorization: token $GITHUB_TOKEN" \
@@ -41,14 +45,17 @@ workflows:
             }' > release.json
 
           UPLOAD_URL=$(cat release.json | grep upload_url | cut -d '"' -f4 | cut -d '{' -f1)
+
           curl -s \
             -X POST \
             -H "Authorization: token $GITHUB_TOKEN" \
             -H "Content-Type: application/vnd.android.package-archive" \
             --data-binary @"$CM_BUILD_DIR/output/tvkeymapper.apk" \
             "$UPLOAD_URL?name=tvkeymapper.apk"
+
     artifacts:
       - output/*.apk
+
     triggering:
       events:
         - tag
