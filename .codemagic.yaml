@@ -1,0 +1,29 @@
+workflows:
+  build-apk:
+    name: Build Android Release APK
+    max_build_duration: 15
+    environment:
+      vars:
+        JAVA_VERSION: 17
+      android_signing:
+        - mitv_key_mapper_keystore
+    scripts:
+      - name: Set up Java
+        script: |
+          sdk install java ${JAVA_VERSION}.0.2-tem
+          sdk use java ${JAVA_VERSION}.0.2-tem
+      - name: Make gradlew executable
+        script: chmod +x ./gradlew
+      - name: Build release APK
+        script: ./gradlew assembleRelease
+      - name: Copy APK
+        script: |
+          mkdir -p $CM_BUILD_DIR/output
+          cp app/build/outputs/apk/release/*.apk $CM_BUILD_DIR/output/
+    artifacts:
+      - output/*.apk
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'v*'
