@@ -3,6 +3,8 @@ workflows:
     name: Build Android Release APK
     max_build_duration: 15
     environment:
+      groups:
+        - keymapper
       java: 17
       vars:
         RELEASE_NAME: "MiTV Key Mapper"
@@ -39,10 +41,8 @@ workflows:
               "prerelease": false
             }' > release.json
 
-          # Выводим весь ответ для отладки
           cat release.json
 
-          # Получаем upload_url без шаблона
           UPLOAD_URL=$(jq -r '.upload_url' release.json | cut -d '{' -f1)
 
           echo "Uploading APK to $UPLOAD_URL"
