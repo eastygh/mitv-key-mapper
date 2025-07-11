@@ -23,3 +23,6 @@ adb shell pm grant ru.easty.andoird.tvkeymapper android.permission.READ_LOGS
 - Remaps vendor-locked remote buttons (Netflix/Live TV etc.)
 - Requires `logcat` access for key event detection
 
+## CI/CD
+
+Build with [CodeMagic](https://codemagic.io/)
