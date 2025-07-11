@@ -8,8 +8,8 @@ workflows:
       vars:
         JAVA_VERSION: 17
         RELEASE_NAME: "MiTV Key Mapper"
-      android_signing:
-        - mitv_key_mapper_keystore
+#      android_signing:
+#        - mitv_key_mapper_keystore
 
     scripts:
       - name: Set up Java
