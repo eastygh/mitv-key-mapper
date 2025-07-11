@@ -3,20 +3,11 @@ workflows:
     name: Build Android Release APK
     max_build_duration: 15
     environment:
-      groups:
-        - keymapper
+      java: 17
       vars:
-        JAVA_VERSION: 17
         RELEASE_NAME: "MiTV Key Mapper"
-#      android_signing:
-#        - mitv_key_mapper_keystore
 
     scripts:
-      - name: Setup Java
-        script: |
-          sdk install java ${JAVA_VERSION}.0.2-tem
-          sdk use java ${JAVA_VERSION}.0.2-tem
-
       - name: Make gradlew executable
         script: chmod +x ./gradlew
 
