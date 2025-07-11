@@ -21,8 +21,10 @@ workflows:
 
       - name: Upload to GitHub Release
         script: |
-          TAG_NAME=$(echo $CM_TAG)
+          TAG_NAME=$CM_TAG
           RELEASE_BODY="Automated release via Codemagic CI"
+
+          echo "Creating release for tag: $TAG_NAME"
 
           curl -s \
             -X POST \
@@ -37,7 +39,13 @@ workflows:
               "prerelease": false
             }' > release.json
 
-          UPLOAD_URL=$(cat release.json | grep upload_url | cut -d '"' -f4 | cut -d '{' -f1)
+          # Выводим весь ответ для отладки
+          cat release.json
+
+          # Получаем upload_url без шаблона
+          UPLOAD_URL=$(jq -r '.upload_url' release.json | cut -d '{' -f1)
+
+          echo "Uploading APK to $UPLOAD_URL"
 
           curl -s \
             -X POST \
